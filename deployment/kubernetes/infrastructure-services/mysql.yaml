@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: eventuate-tram-examples-customers-and-orders
+  labels:
+    name: mysql
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 3306
+    targetPort: 3306
+  selector:
+    role: mysql
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  namespace: eventuate-tram-examples-customers-and-orders
+spec:
+  selector:
+    matchLabels:
+      role: mysql
+  serviceName: "mysql"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        role: mysql
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: mysql
+          image: eventuateio/eventuate-mysql:0.8.0.RELEASE
+          args:
+            - "--ignore-db-dir=lost+found"
+          imagePullPolicy: IfNotPresent
+          ports:
+              - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: rootpassword
+            - name: MYSQL_USER
+              value: mysqluser
+            - name: MYSQL_PASSWORD
+              value: mysqlpw
+          livenessProbe:
+            exec:
+              command:
+              - echo 
+              - "'select * from eventuate.message limit 1' | "
+              - 'mysql -h localhost -u mysqluser --password=mysqlpw'
+            periodSeconds: 10
+            failureThreshold: 25
+          readinessProbe:
+            exec:
+              command:
+              - echo 
+              - "'select * from eventuate.message limit 1' | "
+              - 'mysql -h localhost -u mysqluser --password=mysqlpw'
+            periodSeconds: 10
+            failureThreshold: 25
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-persistent-storage
+      namespace: eventuate-tram-examples-customers-and-orders
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 256Mi
+---

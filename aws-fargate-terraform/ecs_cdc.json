@@ -1,0 +1,87 @@
+[
+    {
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "${logs_group}",
+          "awslogs-region": "${logs_region}",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "portMappings": [
+        {
+          "hostPort": 8099,
+          "protocol": "tcp",
+          "containerPort": 8099
+        },
+        {
+          "hostPort": 8080,
+          "protocol": "tcp",
+          "containerPort": 8080
+        }
+      ],
+      "environment": [
+        {
+          "name": "EVENTUATELOCAL_CDC_MYSQL_BINLOG_CLIENT_UNIQUE_ID",
+          "value": "1234567890"
+        },
+        {
+          "name": "EVENTUATELOCAL_CDC_READ_OLD_DEBEZIUM_DB_OFFSET_STORAGE_TOPIC",
+          "value": "false"
+        },
+        {
+          "name": "EVENTUATELOCAL_CDC_READER_NAME",
+          "value": "MySqlReader"
+        },
+        {
+          "name": "EVENTUATELOCAL_CDC_OFFSET_STORE_KEY",
+          "value": "MySqlBinlog"
+        },
+        {
+          "name": "EVENTUATELOCAL_CDC_DB_PASSWORD",
+          "value": "${db_pwd}"
+        },
+        {
+          "name": "EVENTUATELOCAL_CDC_DB_USER_NAME",
+          "value": "${db_user}"
+        },
+        {
+          "name": "EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS",
+          "value": "${eventuate_bootstrap_brokers}"
+        },
+        {
+          "name": "EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING",
+          "value": "${zookeeper_connection_string}"
+        },
+        {
+          "name": "SPRING_DATASOURCE_DRIVER_CLASS_NAME",
+          "value": "com.mysql.cj.jdbc.Driver"
+        },
+        {
+          "name": "SPRING_DATASOURCE_PASSWORD",
+          "value": "${db_pwd}"
+        },
+        {
+          "name": "SPRING_DATASOURCE_URL",
+          "value": "${db_url}"
+        },
+        {
+          "name": "SPRING_DATASOURCE_USERNAME",
+          "value": "${db_user}"
+        }
+      ],
+      "image": "eventuateio/eventuate-cdc-service:0.4.0.RELEASE",
+      "dependsOn": [
+
+      ],
+      "name": "cdcservice",
+      "essential": true,
+      "healthCheck" : {
+        "command" : [ "CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1" ],
+        "interval": 30,
+        "retries": 3,
+        "startPeriod": 60,
+        "timeout": 5
+      }
+    }
+  ]

@@ -1,0 +1,33 @@
+version: 2.1
+orbs:
+  eventuate-gradle-build-and-test: "eventuate_io/eventuate-gradle-build-and-test@0.2.1"
+workflows:
+  version: 2.1
+  build-test-and-deploy:
+    jobs:
+      - eventuate-gradle-build-and-test/build-and-test:
+          name: mysql-binlog-intel
+          script: ./build-and-test-all-mysql-binlog.sh
+      - eventuate-gradle-build-and-test/build-and-test:
+          name: mysql-binlog-arm
+          resource_class: arm.medium
+          script: ./build-and-test-all-mysql-binlog.sh
+      - eventuate-gradle-build-and-test/build-and-test:
+          name: mssql-polling
+          script: ./build-and-test-all-mssql-polling.sh
+      - eventuate-gradle-build-and-test/build-and-test:
+          name: postgres-wal
+          script: ./build-and-test-all-postgres-wal.sh
+      - eventuate-gradle-build-and-test/build-and-test:
+          name: mysql-maven
+          script: ./build-and-test-all-mysql-maven.sh
+          maven_cache_command: "./mvnw --update-snapshots package test-compile -DskipTests"
+      - eventuate-gradle-build-and-test/build-and-test:
+          name: deploy-artifacts
+          requires:
+            -  mysql-binlog-intel
+            -  mysql-binlog-arm
+            -  postgres-wal
+            -  mssql-polling
+            -  mysql-maven
+          script: ./publish-docker-images.sh
